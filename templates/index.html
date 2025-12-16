@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-8">
+    <!-- 행사 정보 -->
+    <div class="text-center py-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl text-white shadow-lg">
+        <h1 class="text-3xl font-bold mb-2">호스팅플랫폼팀 2025 송년회</h1>
+        <p class="text-xl opacity-90">2025년 12월 18일(목) 19:00</p>
+    </div>
+
+    <!-- 참석 현황 요약 -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">참석 현황</h2>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-3xl font-bold text-blue-600">{{ stats.total }}</div>
+                <div class="text-sm text-gray-600 mt-1">등록 인원</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-3xl font-bold text-green-600">{{ stats.attending }}</div>
+                <div class="text-sm text-gray-600 mt-1">참석</div>
+            </div>
+            <div class="text-center p-4 bg-red-50 rounded-lg">
+                <div class="text-3xl font-bold text-red-600">{{ stats.not_attending }}</div>
+                <div class="text-sm text-gray-600 mt-1">불참</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 액션 버튼 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a href="/rsvp" class="flex items-center justify-center gap-3 p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-indigo-200">
+            <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+            </div>
+            <div class="text-left">
+                <div class="font-semibold text-gray-800">참석 여부 등록</div>
+                <div class="text-sm text-gray-500">참석/불참을 등록하세요</div>
+            </div>
+        </a>
+
+        <a href="/places" class="flex items-center justify-center gap-3 p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-purple-200">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </div>
+            <div class="text-left">
+                <div class="font-semibold text-gray-800">장소 추천/투표</div>
+                <div class="text-sm text-gray-500">장소를 추천하고 투표하세요</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

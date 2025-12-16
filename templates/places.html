@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="space-y-8">
+    <h1 class="text-2xl font-bold text-gray-800">장소 추천 & 투표</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 장소 추천 폼 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">장소 추천하기</h2>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="add_place">
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                        장소명 <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="title" name="title" required maxlength="60"
+                           placeholder="예: 강남역 고기집"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition">
+                </div>
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">설명 (선택)</label>
+                    <input type="text" id="description" name="description" maxlength="200"
+                           placeholder="간단한 설명이나 위치"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition">
+                </div>
+
+                {% if add_message %}
+                <div class="p-3 rounded-lg text-sm {% if add_message[1] == 'success' %}bg-green-50 text-green-700{% else %}bg-red-50 text-red-700{% endif %}">
+                    {{ add_message[0] }}
+                </div>
+                {% endif %}
+
+                <button type="submit" class="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition">
+                    장소 추천하기
+                </button>
+            </form>
+        </div>
+
+        <!-- 투표 폼 -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">투표하기</h2>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="vote">
+                <div>
+                    <label for="voter_name" class="block text-sm font-medium text-gray-700 mb-1">
+                        이름 <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="voter_name" name="voter_name" required maxlength="30"
+                           placeholder="투표자 이름"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        장소 선택 <span class="text-red-500">*</span>
+                    </label>
+                    {% if places %}
+                    <div class="space-y-2 max-h-48 overflow-y-auto">
+                        {% for place in places %}
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="place_id" value="{{ place.id }}" class="sr-only peer" required>
+                            <div class="w-full text-left p-3 rounded-lg border-2 transition peer-checked:border-indigo-500 peer-checked:bg-indigo-50 border-gray-200 hover:border-gray-300">
+                                <div class="font-medium text-gray-800">{{ place.title }}</div>
+                                {% if place.description %}
+                                <div class="text-sm text-gray-500">{{ place.description }}</div>
+                                {% endif %}
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-gray-500">아직 추천된 장소가 없습니다.</p>
+                    {% endif %}
+                </div>
+
+                {% if vote_message %}
+                <div class="p-3 rounded-lg text-sm {% if vote_message[1] == 'success' %}bg-green-50 text-green-700{% else %}bg-red-50 text-red-700{% endif %}">
+                    {{ vote_message[0] }}
+                </div>
+                {% endif %}
+
+                <button type="submit" {% if not places %}disabled{% endif %}
+                        class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition">
+                    투표하기
+                </button>
+
+                <p class="text-xs text-gray-500 text-center">
+                    1인 1표입니다. 이미 투표한 경우 다른 장소로 변경됩니다.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 장소 목록 및 투표 현황 -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">투표 현황</h2>
+        {% if places %}
+        <div class="space-y-3">
+            {% for place in places %}
+            <div class="p-4 rounded-lg border-2 {% if place.vote_count > 0 and place.vote_count == max_votes %}border-yellow-400 bg-yellow-50{% else %}border-gray-200{% endif %}">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <span class="font-medium text-gray-800">{{ place.title }}</span>
+                        {% if place.vote_count > 0 and place.vote_count == max_votes %}
+                        <span class="ml-2 text-xs bg-yellow-400 text-yellow-800 px-2 py-0.5 rounded-full">1위</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-lg font-bold text-indigo-600">{{ place.vote_count }}표</span>
+                </div>
+                {% if place.description %}
+                <p class="text-sm text-gray-500">{{ place.description }}</p>
+                {% endif %}
+                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-indigo-500 rounded-full transition-all duration-300"
+                         style="width: {% if max_votes > 0 %}{{ (place.vote_count / max_votes * 100)|int }}{% else %}0{% endif %}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            아직 추천된 장소가 없습니다. 위에서 장소를 추천해주세요!
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
