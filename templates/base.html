@@ -11,11 +11,23 @@
         <div class="max-w-4xl mx-auto px-4">
             <div class="flex items-center justify-between h-14">
                 <a href="/" class="font-bold text-lg text-indigo-600">송년회 2025</a>
-                <div class="flex space-x-1">
+                <div class="flex items-center space-x-1">
                     <a href="/" class="px-3 py-2 rounded-md text-sm font-medium {% if request.path == '/' %}bg-indigo-100 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">홈</a>
                     <a href="/rsvp" class="px-3 py-2 rounded-md text-sm font-medium {% if request.path == '/rsvp' %}bg-indigo-100 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">참석 등록</a>
                     <a href="/attendees" class="px-3 py-2 rounded-md text-sm font-medium {% if '/attendees' in request.path %}bg-indigo-100 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">참석 현황</a>
                     <a href="/places" class="px-3 py-2 rounded-md text-sm font-medium {% if request.path == '/places' %}bg-indigo-100 text-indigo-700{% else %}text-gray-600 hover:bg-gray-100{% endif %}">장소 투표</a>
+
+                    {% if user %}
+                    <div class="flex items-center ml-4 pl-4 border-l">
+                        {% if user.picture %}
+                        <img src="{{ user.picture }}" alt="{{ user.name }}" class="w-8 h-8 rounded-full mr-2">
+                        {% endif %}
+                        <span class="text-sm text-gray-700 mr-2">{{ user.name }}</span>
+                        <a href="/logout" class="text-sm text-gray-500 hover:text-gray-700">로그아웃</a>
+                    </div>
+                    {% else %}
+                    <a href="/login" class="ml-4 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">로그인</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

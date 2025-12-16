@@ -3,6 +3,7 @@
 <div class="space-y-8">
     <h1 class="text-2xl font-bold text-gray-800">장소 추천 & 투표</h1>
 
+    {% if user %}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- 장소 추천 폼 -->
         <div class="bg-white rounded-xl shadow-md p-6">
@@ -39,16 +40,13 @@
         <!-- 투표 폼 -->
         <div class="bg-white rounded-xl shadow-md p-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4">투표하기</h2>
+            {% if user_vote %}
+            <div class="mb-4 p-3 bg-blue-50 text-blue-700 rounded-lg text-sm">
+                이미 투표하셨습니다. 다른 장소를 선택하면 투표가 변경됩니다.
+            </div>
+            {% endif %}
             <form method="POST" class="space-y-4">
                 <input type="hidden" name="action" value="vote">
-                <div>
-                    <label for="voter_name" class="block text-sm font-medium text-gray-700 mb-1">
-                        이름 <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="voter_name" name="voter_name" required maxlength="30"
-                           placeholder="투표자 이름"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition">
-                </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -58,12 +56,14 @@
                     <div class="space-y-2 max-h-48 overflow-y-auto">
                         {% for place in places %}
                         <label class="block cursor-pointer">
-                            <input type="radio" name="place_id" value="{{ place.id }}" class="sr-only peer" required>
+                            <input type="radio" name="place_id" value="{{ place.id }}" class="sr-only peer" required
+                                   {% if user_vote == place.id %}checked{% endif %}>
                             <div class="w-full text-left p-3 rounded-lg border-2 transition peer-checked:border-indigo-500 peer-checked:bg-indigo-50 border-gray-200 hover:border-gray-300">
                                 <div class="font-medium text-gray-800">{{ place.title }}</div>
                                 {% if place.description %}
                                 <div class="text-sm text-gray-500">{{ place.description }}</div>
                                 {% endif %}
+                                <div class="text-xs text-gray-400 mt-1">추천: {{ place.creator_name }}</div>
                             </div>
                         </label>
                         {% endfor %}
@@ -81,15 +81,20 @@
 
                 <button type="submit" {% if not places %}disabled{% endif %}
                         class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition">
-                    투표하기
+                    {% if user_vote %}투표 변경{% else %}투표하기{% endif %}
                 </button>
 
                 <p class="text-xs text-gray-500 text-center">
-                    1인 1표입니다. 이미 투표한 경우 다른 장소로 변경됩니다.
+                    1인 1표입니다.
                 </p>
             </form>
         </div>
     </div>
+    {% else %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+        <p class="text-yellow-800">장소 추천과 투표는 <a href="/login" class="underline font-medium">로그인</a> 후 가능합니다.</p>
+    </div>
+    {% endif %}
 
     <!-- 장소 목록 및 투표 현황 -->
     <div class="bg-white rounded-xl shadow-md p-6">
@@ -110,6 +115,7 @@
                 {% if place.description %}
                 <p class="text-sm text-gray-500">{{ place.description }}</p>
                 {% endif %}
+                <p class="text-xs text-gray-400 mt-1">추천: {{ place.creator_name }}</p>
                 <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div class="h-full bg-indigo-500 rounded-full transition-all duration-300"
                          style="width: {% if max_votes > 0 %}{{ (place.vote_count / max_votes * 100)|int }}{% else %}0{% endif %}%"></div>
@@ -119,7 +125,7 @@
         </div>
         {% else %}
         <div class="text-center py-8 text-gray-500">
-            아직 추천된 장소가 없습니다. 위에서 장소를 추천해주세요!
+            아직 추천된 장소가 없습니다. {% if user %}위에서 장소를 추천해주세요!{% else %}<a href="/login" class="underline">로그인</a>하여 장소를 추천해주세요!{% endif %}
         </div>
         {% endif %}
     </div>
