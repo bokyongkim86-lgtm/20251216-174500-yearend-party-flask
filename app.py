@@ -1,10 +1,12 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 import sqlite3
 import os
 from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'yearend-party-2025-secret')
 DB_PATH = os.environ.get('DB_PATH', 'party.db')
+ADMIN_KEY = os.environ.get('ADMIN_KEY', 'hosting2025!')
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -254,6 +256,114 @@ def api_votes():
     except Exception as e:
         conn.close()
         return jsonify({'error': str(e)}), 500
+
+def check_admin(key=None):
+    """Check if admin key is valid (from param or session)"""
+    if key and key == ADMIN_KEY:
+        return True
+    return session.get('is_admin', False)
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    message = None
+    if request.method == 'POST':
+        action = request.form.get('action')
+        key = request.form.get('key', '')
+
+        if action == 'login':
+            if key == ADMIN_KEY:
+                session['is_admin'] = True
+                message = ('관리자 로그인 성공!', 'success')
+            else:
+                message = ('비밀키가 틀렸습니다.', 'error')
+
+        elif action == 'logout':
+            session.pop('is_admin', None)
+            message = ('로그아웃 되었습니다.', 'success')
+
+        elif session.get('is_admin'):
+            conn = get_db()
+            if action == 'delete_attendees':
+                conn.execute('DELETE FROM attendees')
+                conn.commit()
+                message = ('모든 참석자가 삭제되었습니다.', 'success')
+            elif action == 'delete_places':
+                conn.execute('DELETE FROM votes')
+                conn.execute('DELETE FROM places')
+                conn.commit()
+                message = ('모든 장소와 투표가 삭제되었습니다.', 'success')
+            elif action == 'delete_votes':
+                conn.execute('DELETE FROM votes')
+                conn.commit()
+                message = ('모든 투표가 삭제되었습니다.', 'success')
+            elif action == 'delete_all':
+                conn.execute('DELETE FROM votes')
+                conn.execute('DELETE FROM places')
+                conn.execute('DELETE FROM attendees')
+                conn.commit()
+                message = ('모든 데이터가 삭제되었습니다.', 'success')
+            conn.close()
+        else:
+            message = ('관리자 로그인이 필요합니다.', 'error')
+
+    conn = get_db()
+    stats = {
+        'attendees': conn.execute('SELECT COUNT(*) FROM attendees').fetchone()[0],
+        'places': conn.execute('SELECT COUNT(*) FROM places').fetchone()[0],
+        'votes': conn.execute('SELECT COUNT(*) FROM votes').fetchone()[0],
+    }
+    conn.close()
+
+    return render_template('admin.html', is_admin=session.get('is_admin', False), message=message, stats=stats)
+
+# Delete APIs (require admin key)
+@app.route('/api/attendees/all', methods=['DELETE'])
+def api_delete_all_attendees():
+    key = request.args.get('key') or request.headers.get('X-Admin-Key')
+    if not check_admin(key):
+        return jsonify({'error': '관리자 인증이 필요합니다.'}), 403
+    conn = get_db()
+    conn.execute('DELETE FROM attendees')
+    conn.commit()
+    conn.close()
+    return jsonify({'message': '모든 참석자가 삭제되었습니다.'})
+
+@app.route('/api/attendees/<name>', methods=['DELETE'])
+def api_delete_attendee(name):
+    key = request.args.get('key') or request.headers.get('X-Admin-Key')
+    if not check_admin(key):
+        return jsonify({'error': '관리자 인증이 필요합니다.'}), 403
+    conn = get_db()
+    result = conn.execute('DELETE FROM attendees WHERE name=?', (name,))
+    conn.commit()
+    deleted = result.rowcount
+    conn.close()
+    if deleted:
+        return jsonify({'message': f'{name}님이 삭제되었습니다.'})
+    return jsonify({'error': '해당 참석자를 찾을 수 없습니다.'}), 404
+
+@app.route('/api/places/all', methods=['DELETE'])
+def api_delete_all_places():
+    key = request.args.get('key') or request.headers.get('X-Admin-Key')
+    if not check_admin(key):
+        return jsonify({'error': '관리자 인증이 필요합니다.'}), 403
+    conn = get_db()
+    conn.execute('DELETE FROM votes')
+    conn.execute('DELETE FROM places')
+    conn.commit()
+    conn.close()
+    return jsonify({'message': '모든 장소와 투표가 삭제되었습니다.'})
+
+@app.route('/api/votes/all', methods=['DELETE'])
+def api_delete_all_votes():
+    key = request.args.get('key') or request.headers.get('X-Admin-Key')
+    if not check_admin(key):
+        return jsonify({'error': '관리자 인증이 필요합니다.'}), 403
+    conn = get_db()
+    conn.execute('DELETE FROM votes')
+    conn.commit()
+    conn.close()
+    return jsonify({'message': '모든 투표가 삭제되었습니다.'})
 
 # Initialize DB on import (works with gunicorn)
 init_db()
