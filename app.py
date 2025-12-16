@@ -1,9 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
 import sqlite3
 import os
 from datetime import datetime
 from functools import wraps
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'yearend-party-2025-secret-key-change-me')
